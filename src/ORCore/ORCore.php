@@ -10,7 +10,6 @@ use pocketmine\permission\Permission;
 use pocketmine\Player;
 use pocketmine\Server;
 use pocketmine\plugin\PluginBase;
-use pocketmine\utils\TextFormat;
 use ORCore\event\PlayerAuthenticateEvent;
 use ORCore\event\PlayerDeauthenticateEvent;
 use ORCore\event\PlayerRegisterEvent;
