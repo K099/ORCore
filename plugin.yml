@@ -1,0 +1,32 @@
+name: ORCore
+main: ORCore\ORCore
+version: 1.7.2
+api: 2.0.0
+load: STARTUP
+author: PocketMine Team
+authors: [rewrite by AkeKy]
+description: Prevents people to impersonate an account, requering registration and login when connecting.
+commands:
+ login:
+  description: "Logs into an account"
+  usage: "/login <password>"
+ register:
+  description: "Registers an account"
+  usage: "/register <password>"
+permissions:
+ orcore:
+  default: op
+  description: "Allows using everything ORCore has"
+  children:
+   orcore.chat:
+    description: "Allows using the chat while not being authenticated"
+    default: false
+   orcore.move:
+    description: "Allows moving while not being authenticated"
+    default: false
+   orcore.lastid:
+    description: "Allows authenticating using the last id when enabled in the config"
+    default: true
+   orcore.command:
+    description: "Allows using ORCore commands"
+    default: true
