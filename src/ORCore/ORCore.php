@@ -243,6 +243,63 @@ class ORCore extends PluginBase{
 					return true;
 				}
 				break;
+			case "vips":
+			    if(!isset($args[0]) || count($args) > 2){
+			    	$sender->sendMessage("§aUsage: /vips <add/remove/list>");
+			    	return true;
+			    }
+			    switch(strtolower($args[0])){
+			    	case "add":
+			    	    if(isset($args[1])){
+			    	    	$who_player = $this->getValidPlayer($args[1]);
+			    	    	if($who_player instanceof Player){
+			    	    		$target = $who_player->getName();
+			    	    	}else{
+			    	    		$target = $args[1];
+			    	    	}
+			    	    	if($this->addPlayer($target)){
+			    	    		$sender->sendMessage("§aSuccessfully added '§b".$target."§a' on VIPSlots!");
+			    	    	}else{
+			    	    		$sender->sendMessage("§e$target is already added on VIPSlots!");
+			    	    	}
+			    	    }else{
+			    	    	$sender->sendMessage("§aUsage: /vips add <player>");
+			    	    }
+			    	    break;
+			    	case "remove":
+			    	    if(isset($args[1])){
+			    	    	$who_player = $this->getValidPlayer($args[1]);
+			    	    	if($who_player instanceof Player){
+			    	    		$target = $who_player->getName();
+			    	    	}else{
+			    	    		$target = $args[1];
+			    	    	}
+			    	    	if($this->removePlayer($target)){
+			    	    		$sender->sendMessage("§6Successfully removed '§b".$target."§6' on VIPSlots!");
+			    	    	}else{
+			    	    		$sender->sendMessage("§6$target doesn't exist on VIPSlots!");
+			    	    	}
+			    	    }else{
+			    	    	$sender->sendMessage("§aUsage: /vips remove <player>");
+			    	    }
+			    	    break;
+			    	case "list":
+			    	    $file = fopen($this->getDataFolder() . "vip_players.txt", "r");
+			    	    $i = 0;
+			    	    while (!feof($file)){
+			    	    	$vips[] = fgets($file);
+			    	    }
+			    	    fclose($file);
+			    	    $sender->sendMessage("-==[ VIPSlots List ]==-");
+			    	    foreach ($vips as $vip){
+			    	    	$sender->sendMessage(" - " . $vip);
+			    	    }
+			    	    break;
+			    	default:
+			    	    $sender->sendMessage("Usage: /vips <add/remove/list>");
+			    	    break;
+			    }
+				break;
 		}
 		return false;
 	}
@@ -267,17 +324,6 @@ class ORCore extends PluginBase{
 	public function onEnable(){
 		$this->saveDefaultConfig();
 		$this->reloadConfig();
-		$this->saveResource("messages.yml", false);
-		$messages = (new Config($this->getDataFolder() . "messages.yml"))->getAll();
-		$this->messages = $this->parseMessages($messages);
-		$registerCommand = $this->getCommand("register");
-		$registerCommand->setUsage('/register <password>');
-		$registerCommand->setDescription('Registers an account');
-		$registerCommand->setPermissionMessage('§cYou do not have permission to use the register command!');
-		$loginCommand = $this->getCommand("login");
-		$loginCommand->setUsage('/login <password>');
-		$loginCommand->setDescription('Logs into an account');
-		$loginCommand->setPermissionMessage('§cYou do not have permission to use the login command!');
 		$this->blockPlayers = (int) $this->getConfig()->get("blockAfterFail", 6);
 		$provider = $this->getConfig()->get("dataProvider");
 		unset($this->provider);
@@ -304,17 +350,20 @@ class ORCore extends PluginBase{
 		}
 		$this->listener = new EventListener($this);
 		$this->getServer()->getPluginManager()->registerEvents($this->listener, $this);
+		$this->loadVIPSList();
 		foreach($this->getServer()->getOnlinePlayers() as $player){
 			$this->deauthenticatePlayer($player);
 		}
 		$this->getLogger()->info("§aEverything loaded!");
 	}
+
 	public function onDisable(){
 		$this->getServer()->getPluginManager();
 		$this->provider->close();
 		$this->messageTask = null;
 		$this->blockSessions = [];
 	}
+
 	public static function orderPermissionsCallback($perm1, $perm2){
 		if(self::isChild($perm1, $perm2)){
 			return -1;
@@ -378,5 +427,64 @@ class ORCore extends PluginBase{
 		}
 
 		return $this->messageTask;
+	}
+	
+	/*****************
+	*================*
+	*==[ Non-APIs ]==*
+	*================*
+	*****************/
+	
+	private function loadVIPSList(){
+		@mkdir($this->getDataFolder(), 0777, true);
+		$this->vips = new Config($this->getDataFolder() . "vip_players.txt", Config::ENUM, array(
+		));
+	}
+	
+	private function getValidPlayer($target){
+		$player = $this->getServer()->getPlayer($target);
+		return $player instanceof Player ? $player : $this->getServer()->getOfflinePlayer($target);
+	}
+	
+	/*****************
+	*================*
+	*==[   APIs   ]==*
+	*================*
+	*****************/
+	
+	public function addPlayer($player){
+		$target = $this->getValidPlayer($player);
+		
+		if($target instanceof Player){
+			$p = strtolower($target->getName());
+		}
+		else{
+			$p = strtolower($player);
+		}
+		
+		if($this->vips->exists($p)) return false;
+		
+		$this->vips->set($p, true);
+		$this->vips->save();
+			
+		return true;
+	}
+	
+	public function removePlayer($player){
+		$target = $this->getValidPlayer($player);
+
+		if($target instanceof Player){
+			$p = strtolower($target->getName());
+		}
+		else{
+			$p = strtolower($player);
+		}
+
+		if(!$this->vips->exists($p)) return false;
+
+		$this->vips->remove($p);
+		$this->vips->save();
+		
+		return true;
 	}
 }

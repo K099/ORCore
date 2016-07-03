@@ -1,7 +1,9 @@
 name: ORCore
 main: ORCore\ORCore
 version: 1.7.2
-api: 2.0.0
+api:
+- 1.12.0
+- 2.0.0
 load: STARTUP
 author: PocketMine Team
 authors: [rewrite by AkeKy]
@@ -13,6 +15,9 @@ commands:
  register:
   description: "Registers an account"
   usage: "/register <password>"
+ vips:
+  description: "Set Permissions"
+  permission: vips.command.vips
 permissions:
  orcore:
   default: op
@@ -30,3 +35,6 @@ permissions:
    orcore.command:
     description: "Allows using ORCore commands"
     default: true
+ vips.command.vips:
+    default: op
+    description: "/vips <add/remove/list>"
